@@ -170,10 +170,13 @@ h1{
 
 /* ---------- Controls ---------- */
 
-.controls-bar{
+.sticky-header-wrap{
   position: sticky;
   top: 0;
   z-index: 20;
+}
+
+.controls-bar{
   background: var(--surface);
   border-bottom: 1px solid var(--line);
   padding: 16px 0;
@@ -267,17 +270,10 @@ select{
 
 main.wrap{ padding: 0 28px 20px; }
 
-.list-head-wrap{
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  overflow: hidden;
-  background: var(--bg);
-  margin-top: 24px;
-}
-
 .list-scroll{
   overflow-x: auto;
+  overflow-y: clip;
+  padding-top: 24px;
 }
 
 /* Shared row grid: name flexes, origin + category fixed, months fixed track */
@@ -289,8 +285,18 @@ main.wrap{ padding: 0 28px 20px; }
   min-width: 780px;
 }
 
-.list-head{
+.list-head-bar{
+  background: var(--bg);
   border-bottom: 1px solid var(--line-strong);
+}
+.list-head-scroll{
+  overflow-x: auto;
+  overflow-y: clip;
+  scrollbar-width: none; /* Firefox */
+}
+.list-head-scroll::-webkit-scrollbar{ display: none; } /* Chrome / Safari */
+
+.list-head{
   padding: 10px 4px 10px;
   font-family: var(--font-mono);
   font-size: 10.5px;
@@ -554,6 +560,22 @@ main.wrap{ padding: 0 28px 20px; }
   object-fit: cover;
 }
 
+.info-pack-link{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--pine);
+  text-decoration: none;
+  border-bottom: 1px solid var(--pine);
+  padding-bottom: 1px;
+}
+.info-pack-link:hover{
+  opacity: 0.75;
+}
+
 .detail-line{
   display: flex;
   justify-content: space-between;
@@ -643,7 +665,7 @@ main.wrap{ padding: 0 28px 20px; }
 
 body.view-mobile .hero{ padding: 40px 0 26px; }
 body.view-mobile .logo{ height: 72px; }
-body.view-mobile .list-head-wrap{ display: none; }
+body.view-mobile .list-head-bar{ display: none; }
 body.view-mobile .list-scroll{ overflow-x: visible; padding-top: 8px; }
 body.view-mobile .row,
 body.view-mobile .group-header{
@@ -739,40 +761,45 @@ body.view-mobile .pack-compact-row{ justify-content: flex-start; flex-wrap: wrap
     </div>
   </header>
 
-  <div class="controls-bar" id="controls-bar">
-    <div class="wrap controls">
-      <input type="search" id="search" placeholder="Search products, farms, counties&hellip;" aria-label="Search products">
-      <select id="group-filter" aria-label="Filter by category">
-        <option value="">All categories</option>
-      </select>
-      <select id="origin-filter" aria-label="Filter by origin">
-        <option value="">All origins</option>
-        <option value="local">Local</option>
-        <option value="uk">UK</option>
-        <option value="import">Import</option>
-      </select>
-      <span class="count" id="result-count"></span>
-      <div class="view-toggle" role="group" aria-label="Switch layout">
-        <button type="button" class="view-toggle-btn" data-view="desktop">Desktop</button>
-        <button type="button" class="view-toggle-btn" data-view="mobile">Mobile</button>
+  <div class="sticky-header-wrap">
+    <div class="controls-bar" id="controls-bar">
+      <div class="wrap controls">
+        <input type="search" id="search" placeholder="Search products, farms, counties&hellip;" aria-label="Search products">
+        <select id="group-filter" aria-label="Filter by category">
+          <option value="">All categories</option>
+        </select>
+        <select id="origin-filter" aria-label="Filter by origin">
+          <option value="">All origins</option>
+          <option value="local">Local</option>
+          <option value="uk">UK</option>
+        </select>
+        <span class="count" id="result-count"></span>
+        <div class="view-toggle" role="group" aria-label="Switch layout">
+          <button type="button" class="view-toggle-btn" data-view="desktop">Desktop</button>
+          <button type="button" class="view-toggle-btn" data-view="mobile">Mobile</button>
+        </div>
+      </div>
+      <div class="wrap month-row">
+        <span class="month-row-label">Season (click to filter months):</span>
+        <div class="month-buttons" id="month-filter-buttons" role="group" aria-label="Filter by months in season"></div>
       </div>
     </div>
-    <div class="wrap month-row">
-      <span class="month-row-label">Season (click to filter months):</span>
-      <div class="month-buttons" id="month-filter-buttons" role="group" aria-label="Filter by months in season"></div>
+    <div class="list-head-bar">
+      <div class="wrap">
+        <div class="list-head-scroll" id="list-head-scroll">
+          <div class="list-head" id="list-head">
+            <span class="col-name">Product</span>
+            <span class="col-origin">Origin</span>
+            <span class="col-category">Category</span>
+            <div class="col-months" id="month-header-labels"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <main class="wrap">
-    <div class="list-head-wrap" id="list-head-wrap">
-      <div class="list-head" id="list-head">
-        <span class="col-name">Product</span>
-        <span class="col-origin">Origin</span>
-        <span class="col-category">Category</span>
-        <div class="col-months" id="month-header-labels"></div>
-      </div>
-    </div>
-    <div class="list-scroll" id="list-scroll">
+    <div class="list-scroll">
       <div id="list" class="list"></div>
     </div>
     <p id="empty-state" class="empty-state" hidden>Nothing matches that search &mdash; try a different term or clear the filters.</p>
@@ -812,23 +839,24 @@ const PRODUCTS = [
     "code": "ALSUBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Braeburn",
-  "origin": "East Sussex",
+  "origin": "UK",
   "group": "Fruit",
   "months": [
    2,
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
+   0,
    1,
-   2,
    2,
    2
   ],
@@ -847,11 +875,12 @@ const PRODUCTS = [
     "code": "APBAKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Bramley",
-  "origin": "East Sussex",
+  "origin": "UK",
   "group": "Fruit",
   "months": [
    2,
@@ -859,8 +888,8 @@ const PRODUCTS = [
    2,
    2,
    2,
+   2,
    1,
-   0,
    0,
    1,
    2,
@@ -882,25 +911,26 @@ const PRODUCTS = [
     "code": "APBPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Cabaret",
-  "origin": "East Sussex",
+  "origin": "Kent",
   "group": "Fruit",
   "months": [
-   1,
-   1,
    0,
    0,
    0,
    0,
    0,
    0,
-   1,
-   2,
-   2,
-   2
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
   ],
   "note": "",
   "status": "hidden",
@@ -912,7 +942,8 @@ const PRODUCTS = [
     "code": "APCABX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Charles Ross",
@@ -930,7 +961,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -947,7 +978,8 @@ const PRODUCTS = [
     "code": "ACRPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Chivers Delight",
@@ -965,7 +997,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -982,7 +1014,8 @@ const PRODUCTS = [
     "code": "ACDPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Cox",
@@ -1000,7 +1033,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -1017,17 +1050,18 @@ const PRODUCTS = [
     "code": "APCOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Crispin",
   "origin": "East Sussex",
   "group": "Fruit",
   "months": [
+   2,
+   2,
+   2,
    1,
-   1,
-   0,
-   0,
    0,
    0,
    0,
@@ -1052,15 +1086,15 @@ const PRODUCTS = [
     "code": "APCRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Discovery",
   "origin": "East Sussex",
   "group": "Fruit",
   "months": [
-   1,
-   1,
+   0,
    0,
    0,
    0,
@@ -1070,7 +1104,8 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1,
+   0
   ],
   "note": "",
   "status": "available",
@@ -1087,7 +1122,8 @@ const PRODUCTS = [
     "code": "APDIKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Fuji",
@@ -1098,7 +1134,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -1122,17 +1158,18 @@ const PRODUCTS = [
     "code": "APFUKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Gala",
-  "origin": "East Sussex",
+  "origin": "UK",
   "group": "Fruit",
   "months": [
+   2,
+   2,
+   2,
    1,
-   1,
-   0,
-   0,
    0,
    0,
    0,
@@ -1140,7 +1177,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "available",
@@ -1152,7 +1189,8 @@ const PRODUCTS = [
     "code": "APGABX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Gold Rush",
@@ -1170,7 +1208,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -1187,7 +1225,8 @@ const PRODUCTS = [
     "code": "AGRPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Howgate Wonder",
@@ -1205,7 +1244,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -1222,7 +1261,8 @@ const PRODUCTS = [
     "code": "AHWPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Jonagold",
@@ -1233,7 +1273,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -1257,7 +1297,8 @@ const PRODUCTS = [
     "code": "APJOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Kidds Orange",
@@ -1275,7 +1316,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -1287,15 +1328,16 @@ const PRODUCTS = [
     "code": "AKOPBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Laxton\u2019s Fortune",
   "origin": "East Sussex",
   "group": "Fruit",
   "months": [
-   1,
-   1,
+   0,
+   0,
    0,
    0,
    0,
@@ -1305,7 +1347,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "available",
@@ -1322,7 +1364,8 @@ const PRODUCTS = [
     "code": "ALFPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Lord Lambourne",
@@ -1339,8 +1382,8 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
-   2
+   1,
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -1357,7 +1400,8 @@ const PRODUCTS = [
     "code": "ALLPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Mairac",
@@ -1375,7 +1419,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -1392,7 +1436,8 @@ const PRODUCTS = [
     "code": "APMAKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Melrose",
@@ -1410,7 +1455,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -1427,25 +1472,26 @@ const PRODUCTS = [
     "code": "APMPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Meridian",
   "origin": "East Sussex",
   "group": "Fruit",
   "months": [
-   1,
-   1,
    0,
    0,
    0,
    0,
    0,
    0,
-   1,
-   2,
-   2,
-   2
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
   ],
   "note": "",
   "status": "hidden",
@@ -1457,7 +1503,8 @@ const PRODUCTS = [
     "code": "APMLKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Pippin Red",
@@ -1475,7 +1522,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -1492,7 +1539,8 @@ const PRODUCTS = [
     "code": "APRPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Red Windsor",
@@ -1527,7 +1575,8 @@ const PRODUCTS = [
     "code": "APRWKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Rosettes",
@@ -1543,7 +1592,7 @@ const PRODUCTS = [
    0,
    0,
    1,
-   2,
+   1,
    1,
    0
   ],
@@ -1562,25 +1611,26 @@ const PRODUCTS = [
     "code": "APROKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Russet",
   "origin": "East Sussex",
   "group": "Fruit",
   "months": [
-   2,
-   2,
-   2,
-   1,
    0,
    0,
    0,
    0,
-   1,
-   2,
-   2,
-   2
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
   ],
   "note": "",
   "status": "hidden",
@@ -1597,25 +1647,26 @@ const PRODUCTS = [
     "code": "APRUKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Spartan",
   "origin": "East Sussex",
   "group": "Fruit",
   "months": [
-   2,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
    1,
-   0,
-   0,
-   0,
-   0,
-   0,
-   0,
-   1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -1632,7 +1683,8 @@ const PRODUCTS = [
     "code": "APSPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Summer Delicious",
@@ -1650,7 +1702,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -1662,7 +1714,8 @@ const PRODUCTS = [
     "code": "ASDPBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apples - Worcester",
@@ -1680,7 +1733,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -1697,7 +1750,8 @@ const PRODUCTS = [
     "code": "APWOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Apricots",
@@ -1710,7 +1764,7 @@ const PRODUCTS = [
    0,
    0,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -1732,11 +1786,12 @@ const PRODUCTS = [
     "code": "APRIKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Artichokes - Globe",
-  "origin": "Cambridgeshire",
+  "origin": "Kent",
   "group": "Vegetables",
   "months": [
    0,
@@ -1746,7 +1801,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    0,
    0,
    0,
@@ -1762,7 +1817,8 @@ const PRODUCTS = [
     "code": "ARGLEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Artichokes - Purple Baby",
@@ -1777,7 +1833,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -1792,19 +1848,20 @@ const PRODUCTS = [
     "code": "APBRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Asparagus",
-  "origin": "Suffolk",
+  "origin": "Varies - see covers_also",
   "group": "Vegetables",
   "months": [
    0,
    1,
    1,
-   2,
-   2,
    1,
+   2,
+   2,
    0,
    0,
    0,
@@ -1842,19 +1899,20 @@ const PRODUCTS = [
     "code": "ASPAKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Asparagus - Green (Jumbo)",
-  "origin": "Suffolk",
+  "origin": "Varies - see covers_also",
   "group": "Vegetables",
   "months": [
    0,
    1,
    1,
-   2,
-   2,
    1,
+   2,
+   2,
    0,
    0,
    0,
@@ -1872,19 +1930,20 @@ const PRODUCTS = [
     "code": "AGJABX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Asparagus - Loose",
-  "origin": "Surrey",
+  "origin": "Varies - see covers_also",
   "group": "Vegetables",
   "months": [
    0,
    1,
    1,
-   2,
-   2,
    1,
+   2,
+   2,
    0,
    0,
    0,
@@ -1902,19 +1961,20 @@ const PRODUCTS = [
     "code": "ASLOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Asparagus - Purple",
-  "origin": "Hampshire",
+  "origin": "Varies - see covers_also",
   "group": "Vegetables",
   "months": [
    0,
    1,
    1,
-   2,
-   2,
    1,
+   2,
+   2,
    0,
    0,
    0,
@@ -1942,19 +2002,20 @@ const PRODUCTS = [
     "code": "ASPPBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Asparagus - Sprue",
-  "origin": "Hampshire",
+  "origin": "Varies - see covers_also",
   "group": "Vegetables",
   "months": [
    0,
    1,
    1,
-   2,
-   2,
    1,
+   2,
+   2,
    0,
    0,
    0,
@@ -1972,25 +2033,26 @@ const PRODUCTS = [
     "code": "ASSPBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Autumn Medlars",
   "origin": "East Sussex",
   "group": "Fruit",
   "months": [
-   1,
-   1,
-   1,
-   1,
-   1,
-   1,
-   1,
-   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
    1,
    2,
    2,
-   0
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -2002,7 +2064,8 @@ const PRODUCTS = [
     "code": "AUMEKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Basil",
@@ -2017,7 +2080,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    0,
    0,
    0
@@ -2037,7 +2100,8 @@ const PRODUCTS = [
     "code": "BASIBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beans - Broad",
@@ -2051,7 +2115,7 @@ const PRODUCTS = [
    0,
    0,
    2,
-   2,
+   1,
    0,
    0,
    0,
@@ -2072,7 +2136,8 @@ const PRODUCTS = [
     "code": "BEBRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beans - French",
@@ -2087,7 +2152,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    0,
    0,
    0
@@ -2107,7 +2172,8 @@ const PRODUCTS = [
     "code": "BEFEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beans - French (Organic)",
@@ -2122,7 +2188,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    0,
    0,
    0
@@ -2147,7 +2213,8 @@ const PRODUCTS = [
     "code": "OFBRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beans - French Mixed Heritage",
@@ -2160,7 +2227,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    0,
    0,
    0,
@@ -2182,7 +2249,8 @@ const PRODUCTS = [
     "code": "BFMHKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beans - Runner",
@@ -2197,7 +2265,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -2217,11 +2285,12 @@ const PRODUCTS = [
     "code": "BERUKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beef - Ribeye",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
@@ -2247,7 +2316,8 @@ const PRODUCTS = [
     "code": "BEREKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Beef.pdf"
  },
  {
   "name": "Beef - Roasting",
@@ -2277,7 +2347,8 @@ const PRODUCTS = [
     "code": "BEROKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Beef.pdf"
  },
  {
   "name": "Beef - Striploin",
@@ -2307,7 +2378,8 @@ const PRODUCTS = [
     "code": "BESTKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Beef.pdf"
  },
  {
   "name": "Beetroot (Organic)",
@@ -2324,7 +2396,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "12 x 500g bunches Organically Grown in Suffolk",
@@ -2337,7 +2409,8 @@ const PRODUCTS = [
     "code": "ORBEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beetroot - Baby Candy",
@@ -2353,7 +2426,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -2367,7 +2440,8 @@ const PRODUCTS = [
     "code": "BBCEBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beetroot - Baby Golden",
@@ -2383,7 +2457,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -2397,7 +2471,8 @@ const PRODUCTS = [
     "code": "BBGEBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beetroot - Baby Red",
@@ -2413,7 +2488,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -2427,11 +2502,12 @@ const PRODUCTS = [
     "code": "BBREBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beetroot - Chioggia",
-  "origin": "Surrey",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    2,
@@ -2467,11 +2543,12 @@ const PRODUCTS = [
     "code": "BECHKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beetroot - Golden",
-  "origin": "Surrey",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    2,
@@ -2507,7 +2584,8 @@ const PRODUCTS = [
     "code": "BEGOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beetroot - Heritage Midi Mixed Colour",
@@ -2523,7 +2601,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -2542,7 +2620,8 @@ const PRODUCTS = [
     "code": "BHMMBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beetroot - Loose Heritage Mixed Colour",
@@ -2577,11 +2656,12 @@ const PRODUCTS = [
     "code": "BLHMKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beetroot - Red",
-  "origin": "Surrey",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    2,
@@ -2617,7 +2697,8 @@ const PRODUCTS = [
     "code": "BERDKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Beetroot - Ware (Organic)",
@@ -2633,7 +2714,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -2647,7 +2728,8 @@ const PRODUCTS = [
     "code": "OWBRSK"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Bell Peppers - Green",
@@ -2663,7 +2745,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -2682,7 +2764,8 @@ const PRODUCTS = [
     "code": "BPGEEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Bell%20Peppers.pdf"
  },
  {
   "name": "Bell Peppers - Mixed",
@@ -2698,7 +2781,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -2712,7 +2795,8 @@ const PRODUCTS = [
     "code": "BPMEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Bell%20Peppers.pdf"
  },
  {
   "name": "Bell Peppers - Orange",
@@ -2728,7 +2812,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -2742,7 +2826,8 @@ const PRODUCTS = [
     "code": "BPOEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Bell%20Peppers.pdf"
  },
  {
   "name": "Bell Peppers - Red",
@@ -2758,7 +2843,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -2777,7 +2862,8 @@ const PRODUCTS = [
     "code": "BPREEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Bell%20Peppers.pdf"
  },
  {
   "name": "Bell Peppers - Yellow",
@@ -2793,7 +2879,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -2812,7 +2898,8 @@ const PRODUCTS = [
     "code": "BPYEEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Bell%20Peppers.pdf"
  },
  {
   "name": "Blackberries - Frozen",
@@ -2822,7 +2909,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -2842,7 +2929,8 @@ const PRODUCTS = [
     "code": "FRBFBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Blackberries - Keymer Brook Farm",
@@ -2857,7 +2945,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -2872,7 +2960,8 @@ const PRODUCTS = [
     "code": "BKBFBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Blackberries - Premium",
@@ -2888,7 +2977,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -2907,7 +2996,8 @@ const PRODUCTS = [
     "code": "BLPRTR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Blackcurrant Leaves",
@@ -2919,7 +3009,7 @@ const PRODUCTS = [
    0,
    0,
    1,
-   2,
+   1,
    1,
    0,
    0,
@@ -2937,7 +3027,8 @@ const PRODUCTS = [
     "code": "BLLEKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Blackcurrants",
@@ -2949,7 +3040,7 @@ const PRODUCTS = [
    0,
    0,
    1,
-   2,
+   1,
    1,
    0,
    0,
@@ -2967,7 +3058,8 @@ const PRODUCTS = [
     "code": "BLALBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Blueberries",
@@ -2982,7 +3074,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -2997,7 +3089,8 @@ const PRODUCTS = [
     "code": "BLUUBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Blueberries - Frozen",
@@ -3008,7 +3101,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -3027,7 +3120,8 @@ const PRODUCTS = [
     "code": "FRBRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Blueberries - Keymer Brook Farm",
@@ -3042,7 +3136,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -3057,7 +3151,8 @@ const PRODUCTS = [
     "code": "BKBFKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Blueberries - Premium",
@@ -3072,7 +3167,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -3092,7 +3187,8 @@ const PRODUCTS = [
     "code": "BLPUBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Broccoli",
@@ -3109,7 +3205,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "",
@@ -3127,7 +3223,8 @@ const PRODUCTS = [
     "code": "BROCKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Broccoli - Purple Sprouting",
@@ -3136,7 +3233,7 @@ const PRODUCTS = [
   "months": [
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -3144,7 +3241,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1
   ],
   "note": "",
@@ -3157,7 +3254,8 @@ const PRODUCTS = [
     "code": "BPSRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Purple%20Sprouting%20Broccoli.pdf"
  },
  {
   "name": "Broccoli - Purple Sprouting Local (Organic)",
@@ -3166,7 +3264,7 @@ const PRODUCTS = [
   "months": [
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -3174,7 +3272,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1
   ],
   "note": "Cambridgeshire Grown Organic",
@@ -3192,7 +3290,8 @@ const PRODUCTS = [
     "code": "OBPSKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Purple%20Sprouting%20Broccoli.pdf"
  },
  {
   "name": "Broccoli - Romanesco",
@@ -3214,7 +3313,8 @@ const PRODUCTS = [
     "code": "BRROEA"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Broccoli - Tenderstem",
@@ -3230,7 +3330,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -3254,7 +3354,8 @@ const PRODUCTS = [
     "code": "BRTOBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cabbage - Giant Pointed (Organic)",
@@ -3272,7 +3373,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2
+   1
   ],
   "note": "Laines Organics, Cuckfield",
   "status": "hidden",
@@ -3289,7 +3390,8 @@ const PRODUCTS = [
     "code": "OGPCEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cabbage - Green Hispi",
@@ -3306,7 +3408,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "",
@@ -3324,7 +3426,8 @@ const PRODUCTS = [
     "code": "CGHAEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cabbage - Hispi MIXED",
@@ -3339,7 +3442,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -3354,7 +3457,8 @@ const PRODUCTS = [
     "code": "CHMCBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cabbage - Hispi Red",
@@ -3369,7 +3473,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -3389,7 +3493,8 @@ const PRODUCTS = [
     "code": "CHRAEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cabbage - January King",
@@ -3400,7 +3505,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -3424,7 +3529,8 @@ const PRODUCTS = [
     "code": "CJKAEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cabbage - Red",
@@ -3435,7 +3541,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -3459,7 +3565,8 @@ const PRODUCTS = [
     "code": "CAREEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cabbage - Savoy (Organic)",
@@ -3476,7 +3583,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "Laines Organics, Cuckfield",
@@ -3494,7 +3601,8 @@ const PRODUCTS = [
     "code": "OSCREA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cabbage - Savoy Large",
@@ -3512,7 +3620,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "available",
@@ -3529,7 +3637,8 @@ const PRODUCTS = [
     "code": "CSLAEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cabbage - Spring Green",
@@ -3544,7 +3653,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -3564,7 +3673,8 @@ const PRODUCTS = [
     "code": "CSGAEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cabbage - White Large",
@@ -3586,17 +3696,18 @@ const PRODUCTS = [
     "code": "CWLAEA"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Carrots",
-  "origin": "Lincolnshire",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    2,
    2,
    2,
-   2,
+   1,
    1,
    1,
    2,
@@ -3621,7 +3732,8 @@ const PRODUCTS = [
     "code": "CARRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Carrots.pdf"
  },
  {
   "name": "Carrots - Baby Orange",
@@ -3637,7 +3749,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -3651,7 +3763,8 @@ const PRODUCTS = [
     "code": "CBOABU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Carrots - Baby Purple",
@@ -3667,7 +3780,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -3681,7 +3794,8 @@ const PRODUCTS = [
     "code": "CBPABU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Carrots - Baby Yellow",
@@ -3697,7 +3811,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -3711,15 +3825,16 @@ const PRODUCTS = [
     "code": "CBYABU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Carrots - Chantenay",
-  "origin": "Lincolnshire",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -3741,15 +3856,16 @@ const PRODUCTS = [
     "code": "CACHBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Carrots.pdf"
  },
  {
   "name": "Carrots - Chantenay Herritage",
-  "origin": "Lincolnshire",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -3771,11 +3887,12 @@ const PRODUCTS = [
     "code": "CCHABX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Carrots.pdf"
  },
  {
   "name": "Carrots - Heritage Mixed",
-  "origin": "Suffolk",
+  "origin": "Surrey",
   "group": "Vegetables",
   "months": [
    1,
@@ -3789,7 +3906,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -3811,7 +3928,8 @@ const PRODUCTS = [
     "code": "CHMAKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Carrots - Mixed Colour (Organic)",
@@ -3829,7 +3947,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2
+   1
   ],
   "note": "Organic Grown, Woodbridge, Suffolk",
   "status": "hidden",
@@ -3846,7 +3964,8 @@ const PRODUCTS = [
     "code": "OCMCKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Carrots.pdf"
  },
  {
   "name": "Carrots - Orange",
@@ -3862,7 +3981,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -3876,7 +3995,8 @@ const PRODUCTS = [
     "code": "CAORBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Carrots - Orange (Organic)",
@@ -3892,7 +4012,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -3916,7 +4036,8 @@ const PRODUCTS = [
     "code": "OCORBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Carrots.pdf"
  },
  {
   "name": "Carrots - Purple",
@@ -3932,7 +4053,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -3946,7 +4067,8 @@ const PRODUCTS = [
     "code": "CAPUBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Carrots - Rainbow (Organic)",
@@ -3962,7 +4084,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -3976,7 +4098,8 @@ const PRODUCTS = [
     "code": "OCRRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Carrots - Yellow",
@@ -3992,7 +4115,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -4006,14 +4129,15 @@ const PRODUCTS = [
     "code": "CAYEBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cauliflower",
   "origin": "Kent",
   "group": "Vegetables",
   "months": [
-   2,
+   1,
    1,
    1,
    2,
@@ -4041,11 +4165,12 @@ const PRODUCTS = [
     "code": "CAULEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Cauliflower.pdf"
  },
  {
   "name": "Cauliflower - Purple",
-  "origin": "Kent",
+  "origin": "West Sussex",
   "group": "Vegetables",
   "months": [
    0,
@@ -4057,7 +4182,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -4076,7 +4201,8 @@ const PRODUCTS = [
     "code": "CAPUEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Cauliflower.pdf"
  },
  {
   "name": "Cavolo Nero",
@@ -4084,7 +4210,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    1,
@@ -4111,7 +4237,8 @@ const PRODUCTS = [
     "code": "CANEKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Cavolo%20Nero.pdf"
  },
  {
   "name": "Cavolo Nero (Organic)",
@@ -4128,7 +4255,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "Laines Organics, Cuckfield",
@@ -4146,11 +4273,12 @@ const PRODUCTS = [
     "code": "OCNRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Cavolo%20Nero.pdf"
  },
  {
   "name": "Celeriac",
-  "origin": "Lincolnshire",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    2,
@@ -4181,14 +4309,15 @@ const PRODUCTS = [
     "code": "CELEKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Celeriac.pdf"
  },
  {
   "name": "Celeriac (Organic)",
   "origin": "West Sussex",
   "group": "Vegetables",
   "months": [
-   2,
+   1,
    1,
    0,
    0,
@@ -4216,7 +4345,8 @@ const PRODUCTS = [
     "code": "ORCEEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Celeriac.pdf"
  },
  {
   "name": "Celeriac - Baby",
@@ -4233,7 +4363,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1
   ],
   "note": "",
@@ -4246,7 +4376,8 @@ const PRODUCTS = [
     "code": "CEBAEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Celeriac.pdf"
  },
  {
   "name": "Celery",
@@ -4261,7 +4392,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -4281,7 +4412,8 @@ const PRODUCTS = [
     "code": "CELEEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chard - Rainbow",
@@ -4298,7 +4430,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "",
@@ -4316,7 +4448,8 @@ const PRODUCTS = [
     "code": "CHRAKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chard - Rainbow (Organic)",
@@ -4333,7 +4466,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "Organic - Rainbow chard",
@@ -4346,7 +4479,8 @@ const PRODUCTS = [
     "code": "ORCRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chard - Swiss",
@@ -4363,7 +4497,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "",
@@ -4381,7 +4515,8 @@ const PRODUCTS = [
     "code": "CHSWKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chard - Swiss (Organic)",
@@ -4398,7 +4533,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "Laines Organics, Cuckfield",
@@ -4416,7 +4551,8 @@ const PRODUCTS = [
     "code": "OSCRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cherries",
@@ -4428,7 +4564,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -4451,7 +4587,8 @@ const PRODUCTS = [
     "code": "CHERKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chillies - Firekiss",
@@ -4467,7 +4604,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -4481,7 +4618,8 @@ const PRODUCTS = [
     "code": "CHFIBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chillies - Green",
@@ -4497,7 +4635,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -4516,7 +4654,8 @@ const PRODUCTS = [
     "code": "CHGRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chillies - Mix",
@@ -4532,7 +4671,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -4551,7 +4690,8 @@ const PRODUCTS = [
     "code": "CHMIKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chillies - Pepper X",
@@ -4567,7 +4707,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -4581,7 +4721,8 @@ const PRODUCTS = [
     "code": "CHPXKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chillies - Red",
@@ -4597,7 +4738,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -4616,7 +4757,8 @@ const PRODUCTS = [
     "code": "CHREKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chillies - Scotch Bonnet",
@@ -4632,7 +4774,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -4646,7 +4788,8 @@ const PRODUCTS = [
     "code": "CHSBKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chives",
@@ -4661,7 +4804,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -4681,7 +4824,8 @@ const PRODUCTS = [
     "code": "CHIVBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chives (Flowering)",
@@ -4693,7 +4837,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -4711,7 +4855,8 @@ const PRODUCTS = [
     "code": "CHFLBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Chives (Scapes)",
@@ -4728,7 +4873,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1
   ],
   "note": "Chiddingfold, Sussex",
@@ -4741,7 +4886,8 @@ const PRODUCTS = [
     "code": "CHSCBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Coriander",
@@ -4757,7 +4903,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -4776,7 +4922,8 @@ const PRODUCTS = [
     "code": "CORIBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Courgette Flowers",
@@ -4789,7 +4936,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -4806,7 +4953,8 @@ const PRODUCTS = [
     "code": "COFLBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Courgettes",
@@ -4820,7 +4968,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -4841,7 +4989,8 @@ const PRODUCTS = [
     "code": "COURKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Courgettes - Wonky",
@@ -4855,7 +5004,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -4871,11 +5020,12 @@ const PRODUCTS = [
     "code": "COWOBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Courgettes - Yellow",
-  "origin": "Surrey",
+  "origin": "Kent",
   "group": "Vegetables",
   "months": [
    0,
@@ -4886,7 +5036,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -4901,7 +5051,8 @@ const PRODUCTS = [
     "code": "COYEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cucumber",
@@ -4917,7 +5068,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -4936,7 +5087,8 @@ const PRODUCTS = [
     "code": "CUCUEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cucumbers - Baby",
@@ -4966,7 +5118,8 @@ const PRODUCTS = [
     "code": "CUBMBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Cucumbers - Piccolo",
@@ -4996,11 +5149,12 @@ const PRODUCTS = [
     "code": "CUPIKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Daikon",
-  "origin": "Wiltshire",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    1,
@@ -5014,7 +5168,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "available",
@@ -5031,7 +5185,8 @@ const PRODUCTS = [
     "code": "DAIKEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Duck - Whole",
@@ -5047,7 +5202,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -5061,7 +5216,8 @@ const PRODUCTS = [
     "code": "DUWHKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Edible Flowers - Alyssum",
@@ -5077,7 +5233,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -5091,7 +5247,8 @@ const PRODUCTS = [
     "code": "EFADBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Edible Flowers - Calendula",
@@ -5107,7 +5264,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -5121,7 +5278,8 @@ const PRODUCTS = [
     "code": "EFCDBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Edible Flowers - Garlic Flowers",
@@ -5137,7 +5295,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -5151,7 +5309,8 @@ const PRODUCTS = [
     "code": "EFGFBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Edible Flowers - Mixed Premium",
@@ -5167,7 +5326,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -5181,11 +5340,12 @@ const PRODUCTS = [
     "code": "EFMPBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Eggs - Free Range Large",
-  "origin": "Surrey",
+  "origin": "Varies - see covers_also",
   "group": "Dairy & Eggs",
   "months": [
    2,
@@ -5211,11 +5371,12 @@ const PRODUCTS = [
     "code": "EFRLBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Eggs - Free Range Medium",
-  "origin": "Surrey",
+  "origin": "Varies - see covers_also",
   "group": "Dairy & Eggs",
   "months": [
    2,
@@ -5241,11 +5402,12 @@ const PRODUCTS = [
     "code": "EFRMBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Eggs - Free Range SMALL",
-  "origin": "Surrey",
+  "origin": "Varies - see covers_also",
   "group": "Dairy & Eggs",
   "months": [
    2,
@@ -5271,11 +5433,12 @@ const PRODUCTS = [
     "code": "EFRETR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Eggs - Quail",
-  "origin": "East Sussex",
+  "origin": "Varies - see covers_also",
   "group": "Dairy & Eggs",
   "months": [
    2,
@@ -5301,7 +5464,8 @@ const PRODUCTS = [
     "code": "EGQGBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Elderflower - Foraged",
@@ -5313,7 +5477,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -5331,11 +5495,12 @@ const PRODUCTS = [
     "code": "ELFOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Fennel",
-  "origin": "West Sussex",
+  "origin": "Kent",
   "group": "Vegetables",
   "months": [
    0,
@@ -5348,7 +5513,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "",
@@ -5366,7 +5531,8 @@ const PRODUCTS = [
     "code": "FENNTR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Fennel (Organic)",
@@ -5383,7 +5549,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "Organic Grown, Suffolk",
@@ -5401,11 +5567,12 @@ const PRODUCTS = [
     "code": "ORFEEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Fig Leaves",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Herbs",
   "months": [
    0,
@@ -5416,7 +5583,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -5431,7 +5598,8 @@ const PRODUCTS = [
     "code": "FILEKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Figs",
@@ -5461,7 +5629,8 @@ const PRODUCTS = [
     "code": "FIGSBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Flowers Edible - Borage",
@@ -5477,7 +5646,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -5491,7 +5660,8 @@ const PRODUCTS = [
     "code": "FEBLBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Flowers Edible - Cornflower",
@@ -5507,7 +5677,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -5521,7 +5691,8 @@ const PRODUCTS = [
     "code": "FECLBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Flowers Edible - Marigold",
@@ -5537,7 +5708,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -5551,7 +5722,8 @@ const PRODUCTS = [
     "code": "FEMLBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Flowers Edible - Nasturtium Flowers",
@@ -5567,7 +5739,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -5581,7 +5753,8 @@ const PRODUCTS = [
     "code": "FENFBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Flowers Edible - Violas",
@@ -5597,7 +5770,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -5611,7 +5784,8 @@ const PRODUCTS = [
     "code": "FEVLBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Garlic - Wild",
@@ -5621,7 +5795,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -5641,7 +5815,8 @@ const PRODUCTS = [
     "code": "GAWIKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Garlic%20-%20Wild.pdf"
  },
  {
   "name": "Garlic - Wild Leaf",
@@ -5671,11 +5846,12 @@ const PRODUCTS = [
     "code": "GWLABX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Gooseberries",
-  "origin": "West Sussex",
+  "origin": "UK",
   "group": "Fruit",
   "months": [
    0,
@@ -5683,7 +5859,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -5701,7 +5877,8 @@ const PRODUCTS = [
     "code": "GOOSBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Gooseberries - Keymer Brook Farm",
@@ -5713,7 +5890,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -5731,7 +5908,8 @@ const PRODUCTS = [
     "code": "GKBFBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Gourds - Mix",
@@ -5749,7 +5927,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -5761,7 +5939,8 @@ const PRODUCTS = [
     "code": "GOMIBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Greengages",
@@ -5778,7 +5957,8 @@ const PRODUCTS = [
     "code": "GREEBX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Heirloom Peppers - Padron",
@@ -5794,7 +5974,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -5813,7 +5993,8 @@ const PRODUCTS = [
     "code": "HPPEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Padron%20Peppers.pdf"
  },
  {
   "name": "Honey - Downlands",
@@ -5830,7 +6011,8 @@ const PRODUCTS = [
     "code": "HODOBX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Honey - Local",
@@ -5847,7 +6029,8 @@ const PRODUCTS = [
     "code": "HOLNBX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Honeycomb",
@@ -5864,7 +6047,8 @@ const PRODUCTS = [
     "code": "HONOBX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Jerusalem Artichoke (Organic)",
@@ -5886,7 +6070,8 @@ const PRODUCTS = [
     "code": "OJARKG"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Juice - Apple",
@@ -5908,7 +6093,8 @@ const PRODUCTS = [
     "code": "JUAUBX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Juice - Apple & Raspberyy 'Ringden Farm'",
@@ -5925,7 +6111,8 @@ const PRODUCTS = [
     "code": "JAR'BX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Juice - Apple Ringden Farm",
@@ -5942,7 +6129,8 @@ const PRODUCTS = [
     "code": "JARUBX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Juice - Apple Sweet",
@@ -5959,15 +6147,16 @@ const PRODUCTS = [
     "code": "JASUBX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Kale - Green",
-  "origin": "Surrey",
+  "origin": "West Sussex",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    1,
@@ -5999,7 +6188,8 @@ const PRODUCTS = [
     "code": "KAGRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Kale - Red",
@@ -6007,7 +6197,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    1,
@@ -6039,7 +6229,8 @@ const PRODUCTS = [
     "code": "KAREKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Kale - Variegated Mixed",
@@ -6056,7 +6247,8 @@ const PRODUCTS = [
     "code": "KVMABX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Kalettes (Pre-Pack)",
@@ -6067,7 +6259,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -6086,14 +6278,15 @@ const PRODUCTS = [
     "code": "KPPABX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Kalettes.pdf"
  },
  {
   "name": "Kiwifruit",
   "origin": "West Sussex",
   "group": "Fruit",
   "months": [
-   2,
+   1,
    1,
    0,
    0,
@@ -6116,14 +6309,15 @@ const PRODUCTS = [
     "code": "KIWIBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Kiwifruit - Small",
   "origin": "West Sussex",
   "group": "Fruit",
   "months": [
-   2,
+   1,
    1,
    0,
    0,
@@ -6146,11 +6340,12 @@ const PRODUCTS = [
     "code": "KISMBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Kohlrabi - Green",
-  "origin": "West Sussex",
+  "origin": "Kent",
   "group": "Vegetables",
   "months": [
    0,
@@ -6162,7 +6357,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -6176,7 +6371,8 @@ const PRODUCTS = [
     "code": "KOGRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Kohlrabi - Purple",
@@ -6192,7 +6388,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -6206,7 +6402,8 @@ const PRODUCTS = [
     "code": "KOPUBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Kohlrabi - Supermetz (Organic)",
@@ -6222,7 +6419,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -6241,11 +6438,12 @@ const PRODUCTS = [
     "code": "OSKRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lamb - Breast",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
@@ -6271,11 +6469,12 @@ const PRODUCTS = [
     "code": "LABRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lamb - Cannons",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
@@ -6301,11 +6500,12 @@ const PRODUCTS = [
     "code": "LACAKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lamb - Leg",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
@@ -6331,11 +6531,12 @@ const PRODUCTS = [
     "code": "LALEKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lamb - Leg Boned & Rolled",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
@@ -6361,11 +6562,12 @@ const PRODUCTS = [
     "code": "LALBKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lamb - Mince",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
@@ -6391,11 +6593,12 @@ const PRODUCTS = [
     "code": "LAMIKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lamb - Rack (French Trimmed)",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
@@ -6421,11 +6624,12 @@ const PRODUCTS = [
     "code": "LAFTKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lamb - Rumps",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
@@ -6451,7 +6655,8 @@ const PRODUCTS = [
     "code": "LARUKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lamb - Saddle",
@@ -6481,7 +6686,8 @@ const PRODUCTS = [
     "code": "LASAKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lamb - Shoulder",
@@ -6511,11 +6717,12 @@ const PRODUCTS = [
     "code": "LASHKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lamb - Shoulder Boned & Rolled",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
@@ -6541,11 +6748,12 @@ const PRODUCTS = [
     "code": "LASBKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lamb - Whole",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
@@ -6571,7 +6779,8 @@ const PRODUCTS = [
     "code": "LAWHKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Leaves - Baby Mixed",
@@ -6593,18 +6802,19 @@ const PRODUCTS = [
     "code": "LBMEBX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Leeks",
-  "origin": "Lancashire",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    2,
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -6628,7 +6838,8 @@ const PRODUCTS = [
     "code": "LEEKKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Leeks (Organic)",
@@ -6639,7 +6850,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -6663,7 +6874,8 @@ const PRODUCTS = [
     "code": "ORLEKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Leeks - Baby",
@@ -6671,7 +6883,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -6693,7 +6905,8 @@ const PRODUCTS = [
     "code": "BALEBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Leeks - Medium",
@@ -6711,7 +6924,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -6723,7 +6936,8 @@ const PRODUCTS = [
     "code": "LEMEBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Leeks - Midi Bunches (Retail)",
@@ -6741,7 +6955,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -6753,13 +6967,16 @@ const PRODUCTS = [
     "code": "LMBRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Baby Gem",
-  "origin": "Cambridgeshire",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
+   0,
+   0,
    0,
    0,
    1,
@@ -6767,9 +6984,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -6788,7 +7003,8 @@ const PRODUCTS = [
     "code": "LBGEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Butterhead Baby",
@@ -6797,14 +7013,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -6823,13 +7039,16 @@ const PRODUCTS = [
     "code": "LBBETR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Cos",
-  "origin": "Cambridgeshire",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
+   0,
+   0,
    0,
    0,
    1,
@@ -6837,9 +7056,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -6858,7 +7075,8 @@ const PRODUCTS = [
     "code": "LECOEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Green Butterhead",
@@ -6867,14 +7085,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -6888,7 +7106,8 @@ const PRODUCTS = [
     "code": "LTBUG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Green Gem",
@@ -6897,14 +7116,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -6923,7 +7142,8 @@ const PRODUCTS = [
     "code": "LGGLEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Iceberg",
@@ -6945,7 +7165,8 @@ const PRODUCTS = [
     "code": "LEICEA"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Lollo Bionda",
@@ -6954,14 +7175,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -6980,7 +7201,8 @@ const PRODUCTS = [
     "code": "LLBEEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Lollo Rosso",
@@ -6989,14 +7211,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -7015,7 +7237,8 @@ const PRODUCTS = [
     "code": "LLREEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Mix Large",
@@ -7024,14 +7247,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -7045,7 +7268,8 @@ const PRODUCTS = [
     "code": "LMLEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Oak Green",
@@ -7054,14 +7278,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -7080,7 +7304,8 @@ const PRODUCTS = [
     "code": "LOGEEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Radicchio",
@@ -7089,14 +7314,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -7110,7 +7335,8 @@ const PRODUCTS = [
     "code": "LEREBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Red Butter",
@@ -7119,14 +7345,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -7140,7 +7366,8 @@ const PRODUCTS = [
     "code": "LTBUR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Red Gem",
@@ -7149,14 +7376,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -7175,7 +7402,8 @@ const PRODUCTS = [
     "code": "LRGEEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Red Oakleaf",
@@ -7184,14 +7412,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -7215,7 +7443,8 @@ const PRODUCTS = [
     "code": "LROEEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Romaine",
@@ -7237,7 +7466,8 @@ const PRODUCTS = [
     "code": "LERLEA"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Round",
@@ -7246,14 +7476,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -7272,7 +7502,8 @@ const PRODUCTS = [
     "code": "LEREEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lettuce - Salanova Red",
@@ -7281,14 +7512,14 @@ const PRODUCTS = [
   "months": [
    0,
    0,
+   0,
+   0,
    1,
    2,
    2,
    2,
    2,
-   2,
-   2,
-   2,
+   1,
    1,
    0
   ],
@@ -7307,7 +7538,8 @@ const PRODUCTS = [
     "code": "LSREEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Lovage",
@@ -7315,16 +7547,16 @@ const PRODUCTS = [
   "group": "Herbs",
   "months": [
    0,
-   1,
-   2,
-   2,
-   1,
    0,
    0,
    0,
+   0,
+   0,
+   0,
+   0,
    1,
    2,
-   2,
+   1,
    1
   ],
   "note": "",
@@ -7337,11 +7569,12 @@ const PRODUCTS = [
     "code": "LOVABU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Marrow",
-  "origin": "Surrey",
+  "origin": "West Sussex",
   "group": "Vegetables",
   "months": [
    0,
@@ -7353,7 +7586,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -7372,7 +7605,8 @@ const PRODUCTS = [
     "code": "MARREA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Micro Flowers",
@@ -7387,7 +7621,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -7402,7 +7636,8 @@ const PRODUCTS = [
     "code": "MIFLBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Micro Herbs - Coriander",
@@ -7418,7 +7653,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    1
   ],
@@ -7432,11 +7667,12 @@ const PRODUCTS = [
     "code": "MHCIBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Micro Herbs - Parsley",
-  "origin": "Surrey",
+  "origin": "West Sussex",
   "group": "Herbs",
   "months": [
    2,
@@ -7448,7 +7684,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    1
   ],
@@ -7462,7 +7698,8 @@ const PRODUCTS = [
     "code": "MHPIBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Micro Herbs - Red Amaranth",
@@ -7478,7 +7715,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    1
   ],
@@ -7492,7 +7729,8 @@ const PRODUCTS = [
     "code": "MHRABX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Micro Herbs - Red Vein Sorrel",
@@ -7508,7 +7746,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    1
   ],
@@ -7522,7 +7760,8 @@ const PRODUCTS = [
     "code": "MHRVBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mint",
@@ -7534,7 +7773,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -7552,7 +7791,8 @@ const PRODUCTS = [
     "code": "MINTEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Monks Beard",
@@ -7563,7 +7803,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -7582,7 +7822,8 @@ const PRODUCTS = [
     "code": "MOBEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Button",
@@ -7617,7 +7858,8 @@ const PRODUCTS = [
     "code": "MUBUKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Chanterelle Winter",
@@ -7647,7 +7889,8 @@ const PRODUCTS = [
     "code": "MCWUKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Chestnut",
@@ -7682,7 +7925,8 @@ const PRODUCTS = [
     "code": "MUCHKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Cups",
@@ -7717,7 +7961,8 @@ const PRODUCTS = [
     "code": "MUCUKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Field / Flat",
@@ -7747,7 +7992,8 @@ const PRODUCTS = [
     "code": "MFFUBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Girolles",
@@ -7762,9 +8008,9 @@ const PRODUCTS = [
    0,
    0,
    1,
+   1,
    2,
-   2,
-   2,
+   1,
    1
   ],
   "note": "",
@@ -7777,7 +8023,8 @@ const PRODUCTS = [
     "code": "MUGITR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - King Oyster (Organic)",
@@ -7807,7 +8054,8 @@ const PRODUCTS = [
     "code": "OMKOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Lion's Mane",
@@ -7837,7 +8085,8 @@ const PRODUCTS = [
     "code": "MLMUKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Maitake (Hen of the Woods) (Organic)",
@@ -7853,7 +8102,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -7867,7 +8116,8 @@ const PRODUCTS = [
     "code": "OMMHKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Maitake Hen Of The Woods",
@@ -7883,7 +8133,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -7897,7 +8147,8 @@ const PRODUCTS = [
     "code": "MUHWKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Morels",
@@ -7927,7 +8178,8 @@ const PRODUCTS = [
     "code": "MUMOBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Nameko (Organic)",
@@ -7957,7 +8209,8 @@ const PRODUCTS = [
     "code": "OMNREA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Oyster (Organic)",
@@ -7987,7 +8240,8 @@ const PRODUCTS = [
     "code": "OMORKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Pied De Mouton",
@@ -8017,7 +8271,8 @@ const PRODUCTS = [
     "code": "MPMUEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Porcini Cepes",
@@ -8047,7 +8302,8 @@ const PRODUCTS = [
     "code": "MPCUKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Portobello",
@@ -8082,7 +8338,8 @@ const PRODUCTS = [
     "code": "MUPOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Shiitake (Organic)",
@@ -8112,7 +8369,8 @@ const PRODUCTS = [
     "code": "OMSRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Trompette De La Mort",
@@ -8142,7 +8400,8 @@ const PRODUCTS = [
     "code": "MTMUKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Mushrooms - Wild Mixed (Organic)",
@@ -8172,7 +8431,8 @@ const PRODUCTS = [
     "code": "OMWMTR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Nectarines",
@@ -8185,7 +8445,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -8202,11 +8462,12 @@ const PRODUCTS = [
     "code": "NECTTR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Nettles",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Vegetables",
   "months": [
    0,
@@ -8218,7 +8479,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -8232,7 +8493,8 @@ const PRODUCTS = [
     "code": "NETTKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Nutbourne Tomatoes - Cherry On Vine",
@@ -8247,7 +8509,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8262,7 +8524,8 @@ const PRODUCTS = [
     "code": "WHOCOV"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Cherry Orange Vine",
@@ -8277,7 +8540,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8292,7 +8555,8 @@ const PRODUCTS = [
     "code": "NTCTBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Cherry Piccolo",
@@ -8307,7 +8571,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8322,7 +8586,8 @@ const PRODUCTS = [
     "code": "NTCBBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Chocolate Cherry",
@@ -8337,7 +8602,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8352,7 +8617,8 @@ const PRODUCTS = [
     "code": "NTCRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Classic",
@@ -8367,7 +8633,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8382,7 +8648,8 @@ const PRODUCTS = [
     "code": "NTCUBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Golden Classic Vine",
@@ -8397,7 +8664,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8412,7 +8679,8 @@ const PRODUCTS = [
     "code": "WHONUTGOC"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Golden Cocktail Vine",
@@ -8427,7 +8695,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8442,7 +8710,8 @@ const PRODUCTS = [
     "code": "NTGUBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Heritage Beef",
@@ -8457,7 +8726,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8472,7 +8741,8 @@ const PRODUCTS = [
     "code": "NTHBBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Large & Midi Mix vine",
@@ -8487,7 +8757,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8502,7 +8772,8 @@ const PRODUCTS = [
     "code": "NTEMBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Marmande",
@@ -8517,7 +8788,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8532,7 +8803,8 @@ const PRODUCTS = [
     "code": "NTMUBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Mix Heritage Loose",
@@ -8547,7 +8819,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8562,7 +8834,8 @@ const PRODUCTS = [
     "code": "NTMHBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Orange Classic Vine",
@@ -8577,7 +8850,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8592,7 +8865,8 @@ const PRODUCTS = [
     "code": "NTONBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Pink Beef",
@@ -8607,7 +8881,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8622,7 +8896,8 @@ const PRODUCTS = [
     "code": "WHONUTPB"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Plum Large Vine",
@@ -8637,7 +8912,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8652,7 +8927,8 @@ const PRODUCTS = [
     "code": "NTPLBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Plum Strawmatoe Baby Vine",
@@ -8667,7 +8943,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8682,7 +8958,8 @@ const PRODUCTS = [
     "code": "NTPNBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Pumpkin Plum Midi Vine",
@@ -8697,7 +8974,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8712,7 +8989,8 @@ const PRODUCTS = [
     "code": "WHONUTMPP"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Purple Star Vine",
@@ -8727,7 +9005,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8742,7 +9020,8 @@ const PRODUCTS = [
     "code": "NTPUBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Red Cocktail Vine",
@@ -8757,7 +9036,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8772,7 +9051,8 @@ const PRODUCTS = [
     "code": "NTRNBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Red Tiger Loose",
@@ -8787,7 +9067,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8802,7 +9082,8 @@ const PRODUCTS = [
     "code": "WHONUTRTL"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - San Marzano Large Loose",
@@ -8817,7 +9098,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8832,7 +9113,8 @@ const PRODUCTS = [
     "code": "NTSNBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - San Marzano Mini Vine",
@@ -8847,7 +9129,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8862,7 +9144,8 @@ const PRODUCTS = [
     "code": "NTSUBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Nutbourne Tomatoes - Small Vine Mixed",
@@ -8877,7 +9160,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -8892,7 +9175,8 @@ const PRODUCTS = [
     "code": "NTFVBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Nutbourne%20Tomatoes.pdf"
  },
  {
   "name": "Onions - Brown",
@@ -8927,7 +9211,8 @@ const PRODUCTS = [
     "code": "ONBRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Onions - Red",
@@ -8962,7 +9247,8 @@ const PRODUCTS = [
     "code": "ONREKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Pak Choi (Organic)",
@@ -8974,7 +9260,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -8992,7 +9278,8 @@ const PRODUCTS = [
     "code": "OPCRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Pak Choi - Head",
@@ -9014,7 +9301,8 @@ const PRODUCTS = [
     "code": "PCHABX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Pak Choi - Tops",
@@ -9025,12 +9313,12 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    1,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -9044,7 +9332,8 @@ const PRODUCTS = [
     "code": "PCTABU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Parsley - Flat Leaf",
@@ -9060,7 +9349,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -9079,7 +9368,8 @@ const PRODUCTS = [
     "code": "PFLABU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Flat%20Leaf%20Parsley.pdf"
  },
  {
   "name": "Parsley - Root (Organic)",
@@ -9096,13 +9386,27 @@ const PRODUCTS = [
     "code": "OPRRBX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Parsnips",
-  "origin": "Norfolk",
+  "origin": "UK",
   "group": "Vegetables",
-  "months": null,
+  "months": [
+   2,
+   2,
+   1,
+   1,
+   0,
+   0,
+   0,
+   1,
+   2,
+   2,
+   2,
+   2
+  ],
   "note": "",
   "status": "available",
   "originDetail": "Grown in King's Lynn, Norfolk by Alfred Pearce",
@@ -9118,7 +9422,8 @@ const PRODUCTS = [
     "code": "PARSKG"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Parsnips - Piccolo",
@@ -9136,7 +9441,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2
+   1
   ],
   "note": "Nottinghamshire grown, small, sweet, and tender baby parsnips that don't need peeling and can be cooked whole",
   "status": "hidden",
@@ -9148,7 +9453,8 @@ const PRODUCTS = [
     "code": "PAPIBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Parsnips - Small",
@@ -9165,7 +9471,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "",
@@ -9183,7 +9489,8 @@ const PRODUCTS = [
     "code": "PASMBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Parsnips - Ware Loose (Organic)",
@@ -9201,7 +9508,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2
+   1
   ],
   "note": "Good length and thickness!  Foskett Farms Organics, Woodbridge, Suffolk",
   "status": "hidden",
@@ -9213,14 +9520,15 @@ const PRODUCTS = [
     "code": "OWPLKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Partridge - Breasts",
   "origin": "West Sussex",
   "group": "Meat",
   "months": [
-   2,
+   1,
    1,
    0,
    0,
@@ -9243,7 +9551,8 @@ const PRODUCTS = [
     "code": "PABRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Pea Shoots - Tendril",
@@ -9278,7 +9587,8 @@ const PRODUCTS = [
     "code": "PSTEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Peaches",
@@ -9291,7 +9601,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -9313,7 +9623,8 @@ const PRODUCTS = [
     "code": "PEAETR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Peaches - Flat",
@@ -9326,7 +9637,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -9343,7 +9654,8 @@ const PRODUCTS = [
     "code": "PEFLTR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Peaches - Large",
@@ -9356,7 +9668,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -9373,7 +9685,8 @@ const PRODUCTS = [
     "code": "PELABX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Pears - Beurre Hardy",
@@ -9381,8 +9694,8 @@ const PRODUCTS = [
   "group": "Fruit",
   "months": [
    2,
-   2,
    1,
+   0,
    0,
    0,
    0,
@@ -9408,7 +9721,8 @@ const PRODUCTS = [
     "code": "PBHEKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Pears - Comice",
@@ -9417,7 +9731,7 @@ const PRODUCTS = [
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -9443,7 +9757,8 @@ const PRODUCTS = [
     "code": "PECPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Pears - Concorde (Organic)",
@@ -9473,7 +9788,8 @@ const PRODUCTS = [
     "code": "OPCRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Pears - Conference",
@@ -9482,9 +9798,9 @@ const PRODUCTS = [
   "months": [
    2,
    2,
+   2,
+   2,
    1,
-   0,
-   0,
    0,
    0,
    0,
@@ -9508,7 +9824,8 @@ const PRODUCTS = [
     "code": "PECAKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Pears - Gieser Wildeman (Organic)",
@@ -9525,7 +9842,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1
   ],
   "note": "Roughly 25 per KG ( Organically grown by stein at brambletye fruit farm, East Grinstead)",
@@ -9538,7 +9855,8 @@ const PRODUCTS = [
     "code": "OPGWKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Peas - Podding",
@@ -9551,7 +9869,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -9573,7 +9891,8 @@ const PRODUCTS = [
     "code": "PEPOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Peppers - Corno De Toro - Green",
@@ -9588,7 +9907,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -9603,7 +9922,8 @@ const PRODUCTS = [
     "code": "PCTGBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Peppers - Sweet Bite",
@@ -9618,7 +9938,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -9643,7 +9963,8 @@ const PRODUCTS = [
     "code": "PSBEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Peppers - Sweet Palermo",
@@ -9658,7 +9979,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -9673,7 +9994,8 @@ const PRODUCTS = [
     "code": "PSPETR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Peppers - Topepo Verde",
@@ -9689,7 +10011,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -9703,7 +10025,8 @@ const PRODUCTS = [
     "code": "PTVEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Pheasant - Whole",
@@ -9711,7 +10034,7 @@ const PRODUCTS = [
   "group": "Meat",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -9733,7 +10056,8 @@ const PRODUCTS = [
     "code": "PHWHEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Plums - Greengage",
@@ -9748,7 +10072,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    0,
    0,
    0
@@ -9763,7 +10087,8 @@ const PRODUCTS = [
     "code": "PLGRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Plums - Opal",
@@ -9777,7 +10102,7 @@ const PRODUCTS = [
    0,
    0,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -9793,7 +10118,8 @@ const PRODUCTS = [
     "code": "PLOPBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Plums - Tophit",
@@ -9810,11 +10136,12 @@ const PRODUCTS = [
     "code": "PLTOBX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Plums - Victoria",
-  "origin": "East Sussex",
+  "origin": "Kent",
   "group": "Fruit",
   "months": [
    0,
@@ -9825,7 +10152,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -9840,7 +10167,8 @@ const PRODUCTS = [
     "code": "PLVPBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Pork - Belly",
@@ -9870,7 +10198,8 @@ const PRODUCTS = [
     "code": "PRKBEL"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Pork - Chops",
@@ -9900,7 +10229,8 @@ const PRODUCTS = [
     "code": "POCPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Pork - Loin Back Whole",
@@ -9930,7 +10260,8 @@ const PRODUCTS = [
     "code": "PRKLOI"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potato - Mixed Heritage Loose",
@@ -9952,7 +10283,8 @@ const PRODUCTS = [
     "code": "PMHLKG"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Bakers (Organic)",
@@ -9961,7 +10293,7 @@ const PRODUCTS = [
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -9987,7 +10319,8 @@ const PRODUCTS = [
     "code": "OPBRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Charlotte",
@@ -9997,7 +10330,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10017,7 +10350,8 @@ const PRODUCTS = [
     "code": "POCHBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Chipper Lovers",
@@ -10026,7 +10360,7 @@ const PRODUCTS = [
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    2,
    2,
@@ -10047,7 +10381,8 @@ const PRODUCTS = [
     "code": "PCLOSK"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Chippers Premium",
@@ -10056,7 +10391,7 @@ const PRODUCTS = [
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    2,
    2,
@@ -10077,7 +10412,8 @@ const PRODUCTS = [
     "code": "PCPOEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Emmalie Red",
@@ -10087,7 +10423,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10112,7 +10448,8 @@ const PRODUCTS = [
     "code": "PEROKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Heide Red",
@@ -10122,7 +10459,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10147,7 +10484,8 @@ const PRODUCTS = [
     "code": "PHROKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Jersey Mids",
@@ -10155,8 +10493,8 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    0,
+   0,
    1,
-   2,
    2,
    2,
    2,
@@ -10177,7 +10515,8 @@ const PRODUCTS = [
     "code": "PJMOBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Jersey%20Royal%20Potatoes.pdf"
  },
  {
   "name": "Potatoes - Jersey Royal",
@@ -10185,8 +10524,8 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    0,
+   0,
    1,
-   2,
    2,
    2,
    2,
@@ -10212,7 +10551,8 @@ const PRODUCTS = [
     "code": "PJROBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Jersey%20Royal%20Potatoes.pdf"
  },
  {
   "name": "Potatoes - La Ratte",
@@ -10222,7 +10562,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10247,7 +10587,8 @@ const PRODUCTS = [
     "code": "PORAKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Mids",
@@ -10282,7 +10623,8 @@ const PRODUCTS = [
     "code": "POMIKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Pink Fir Apple",
@@ -10292,7 +10634,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10317,7 +10659,8 @@ const PRODUCTS = [
     "code": "PPFAKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Red Mozart",
@@ -10327,7 +10670,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10347,7 +10690,8 @@ const PRODUCTS = [
     "code": "PRMOSK"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Salad (Organic)",
@@ -10362,7 +10706,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -10382,7 +10726,8 @@ const PRODUCTS = [
     "code": "OPSRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Violetta",
@@ -10392,7 +10737,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10417,7 +10762,8 @@ const PRODUCTS = [
     "code": "POVPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Vitelotte",
@@ -10427,7 +10773,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10452,7 +10798,8 @@ const PRODUCTS = [
     "code": "POVOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Potatoes - Wilja",
@@ -10469,7 +10816,8 @@ const PRODUCTS = [
     "code": "POWIBX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Pumpkin - White",
@@ -10486,7 +10834,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1
   ],
   "note": "",
@@ -10499,7 +10847,8 @@ const PRODUCTS = [
     "code": "PUWUEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Quince",
@@ -10521,11 +10870,12 @@ const PRODUCTS = [
     "code": "QUINKG"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Radish",
-  "origin": "Suffolk",
+  "origin": "Cambridgeshire",
   "group": "Vegetables",
   "months": [
    0,
@@ -10536,7 +10886,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -10556,7 +10906,8 @@ const PRODUCTS = [
     "code": "RADIBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Radish - Breakfast Bunch (Organic)",
@@ -10571,7 +10922,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -10591,7 +10942,8 @@ const PRODUCTS = [
     "code": "OBRBBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Radish%20%28Organic%29.pdf"
  },
  {
   "name": "Radish - Bunched (Organic)",
@@ -10606,7 +10958,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -10626,7 +10978,8 @@ const PRODUCTS = [
     "code": "OBRRBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Radish%20%28Organic%29.pdf"
  },
  {
   "name": "Radish - Watermelon",
@@ -10640,7 +10993,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10656,11 +11009,12 @@ const PRODUCTS = [
     "code": "RAWAKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Raspberries",
-  "origin": "Surrey",
+  "origin": "Kent",
   "group": "Fruit",
   "months": [
    0,
@@ -10671,7 +11025,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -10686,7 +11040,8 @@ const PRODUCTS = [
     "code": "RASPBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Raspberries - Frozen",
@@ -10697,7 +11052,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10716,7 +11071,8 @@ const PRODUCTS = [
     "code": "FRRABX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Raspberries - Keymer Brook Farm",
@@ -10731,7 +11087,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -10746,11 +11102,12 @@ const PRODUCTS = [
     "code": "RKBFBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Raspberries - Premium",
-  "origin": "Surrey",
+  "origin": "Sussex",
   "group": "Fruit",
   "months": [
    0,
@@ -10761,7 +11118,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -10781,7 +11138,8 @@ const PRODUCTS = [
     "code": "RAPABX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Redcurrants",
@@ -10793,7 +11151,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10811,11 +11169,12 @@ const PRODUCTS = [
     "code": "REDCBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Rhubarb",
-  "origin": "Surrey",
+  "origin": "West Sussex",
   "group": "Vegetables",
   "months": [
    0,
@@ -10826,7 +11185,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -10846,7 +11205,8 @@ const PRODUCTS = [
     "code": "RHUBKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Rhubarb - Forced",
@@ -10854,7 +11214,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10881,7 +11241,8 @@ const PRODUCTS = [
     "code": "RHFOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Rhubarb - Loose Forced Class 2",
@@ -10889,7 +11250,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -10916,7 +11277,8 @@ const PRODUCTS = [
     "code": "RLFCKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Rosemary",
@@ -10938,7 +11300,8 @@ const PRODUCTS = [
     "code": "ROSEBU"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Sage",
@@ -10960,7 +11323,8 @@ const PRODUCTS = [
     "code": "SAGEBU"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Salsify (Organic)",
@@ -10982,7 +11346,8 @@ const PRODUCTS = [
     "code": "ORSABX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Sausage Meat",
@@ -11012,7 +11377,8 @@ const PRODUCTS = [
     "code": "SAUME"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Shallots - Banana Large",
@@ -11047,7 +11413,8 @@ const PRODUCTS = [
     "code": "SBLHKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Shallots - Round",
@@ -11077,7 +11444,8 @@ const PRODUCTS = [
     "code": "SHROBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Sloe Berries",
@@ -11094,7 +11462,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1
   ],
   "note": "",
@@ -11107,7 +11475,8 @@ const PRODUCTS = [
     "code": "SLBEKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Snacks - Strawberry (New forest Fruit)",
@@ -11137,7 +11506,8 @@ const PRODUCTS = [
     "code": "SSNFBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Spinach - Arrow Leaf",
@@ -11147,7 +11517,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11167,7 +11537,8 @@ const PRODUCTS = [
     "code": "SALPKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Spinach - Beet",
@@ -11189,7 +11560,8 @@ const PRODUCTS = [
     "code": "SPBEKG"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Spring Onions",
@@ -11205,7 +11577,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -11224,7 +11596,8 @@ const PRODUCTS = [
     "code": "SPONBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Spring Onions - Red",
@@ -11241,15 +11614,16 @@ const PRODUCTS = [
     "code": "SORPBU"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Sprouts - Loose",
-  "origin": "Lancashire",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11276,7 +11650,8 @@ const PRODUCTS = [
     "code": "SPLOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Sprouts - On Stalk",
@@ -11294,7 +11669,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -11311,7 +11686,8 @@ const PRODUCTS = [
     "code": "SOSPEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Sprouts - Tops",
@@ -11329,7 +11705,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2
+   1
   ],
   "note": "Lincolnshire Grown",
   "status": "hidden",
@@ -11346,7 +11722,8 @@ const PRODUCTS = [
     "code": "SPTOKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Blue Ballet (Organic)",
@@ -11354,7 +11731,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11381,7 +11758,8 @@ const PRODUCTS = [
     "code": "OSBBKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Butternut",
@@ -11403,7 +11781,8 @@ const PRODUCTS = [
     "code": "SQBUEA"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Squash - Butternut Baby",
@@ -11411,7 +11790,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11438,7 +11817,8 @@ const PRODUCTS = [
     "code": "SBBQEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Butternut XL",
@@ -11446,7 +11826,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11468,7 +11848,8 @@ const PRODUCTS = [
     "code": "SBXQEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Crown Prince",
@@ -11476,7 +11857,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11503,7 +11884,8 @@ const PRODUCTS = [
     "code": "SCPQEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Crown Prince (Organic)",
@@ -11511,7 +11893,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11538,7 +11920,8 @@ const PRODUCTS = [
     "code": "OSCPEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Delica",
@@ -11568,7 +11951,8 @@ const PRODUCTS = [
     "code": "SQDEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Delicata (Organic)",
@@ -11576,7 +11960,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11603,7 +11987,8 @@ const PRODUCTS = [
     "code": "OSDRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Festival (Organic)",
@@ -11611,7 +11996,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11638,7 +12023,8 @@ const PRODUCTS = [
     "code": "OSFRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Futsu Black (Organic)",
@@ -11646,7 +12032,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11673,7 +12059,8 @@ const PRODUCTS = [
     "code": "OSFBKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Green Hukidu (Organic)",
@@ -11681,7 +12068,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11708,15 +12095,16 @@ const PRODUCTS = [
     "code": "OSGHKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Harlequin",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11743,15 +12131,16 @@ const PRODUCTS = [
     "code": "SQHAEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Kabocha Green",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11778,15 +12167,16 @@ const PRODUCTS = [
     "code": "SKGQEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Mixed",
-  "origin": "Surrey",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11808,15 +12198,16 @@ const PRODUCTS = [
     "code": "SQMIBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Mixed Box",
-  "origin": "West Sussex",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11843,15 +12234,16 @@ const PRODUCTS = [
     "code": "SMBQBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Onion",
-  "origin": "West Sussex",
+  "origin": "Lincolnshire",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11878,7 +12270,8 @@ const PRODUCTS = [
     "code": "SQONEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Patty Pan Large",
@@ -11886,7 +12279,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11908,15 +12301,16 @@ const PRODUCTS = [
     "code": "SPPLEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Red Sunspot",
-  "origin": "Surrey",
+  "origin": "Sussex",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11943,15 +12337,16 @@ const PRODUCTS = [
     "code": "SRSQEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Sombra",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -11978,15 +12373,16 @@ const PRODUCTS = [
     "code": "SQSOEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Spaghetti",
-  "origin": "Surrey",
+  "origin": "West Sussex",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12008,15 +12404,16 @@ const PRODUCTS = [
     "code": "SQSPBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Squash - Sweet Lighting",
-  "origin": "Surrey",
+  "origin": "Sussex",
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12043,11 +12440,12 @@ const PRODUCTS = [
     "code": "SSLQEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Stor Valley - Apple & Elderflower",
-  "origin": "East Sussex",
+  "origin": "Sussex",
   "group": "Pantry & Drinks",
   "months": [
    2,
@@ -12073,11 +12471,12 @@ const PRODUCTS = [
     "code": "SVAEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Stor Valley - Apple & Ginger",
-  "origin": "East Sussex",
+  "origin": "Sussex",
   "group": "Pantry & Drinks",
   "months": [
    2,
@@ -12103,11 +12502,12 @@ const PRODUCTS = [
     "code": "SVAGBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Stor Valley - Apple & Pear",
-  "origin": "East Sussex",
+  "origin": "Sussex",
   "group": "Pantry & Drinks",
   "months": [
    2,
@@ -12133,11 +12533,12 @@ const PRODUCTS = [
     "code": "SVAPBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Stor Valley - Apple & Raspberry",
-  "origin": "East Sussex",
+  "origin": "Sussex",
   "group": "Pantry & Drinks",
   "months": [
    2,
@@ -12163,11 +12564,12 @@ const PRODUCTS = [
     "code": "SVARBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Stor Valley - British Apple",
-  "origin": "East Sussex",
+  "origin": "Sussex",
   "group": "Pantry & Drinks",
   "months": [
    2,
@@ -12193,7 +12595,8 @@ const PRODUCTS = [
     "code": "SVBABX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Strawberries",
@@ -12210,7 +12613,8 @@ const PRODUCTS = [
     "code": "STRABX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Strawberries - Frozen",
@@ -12220,7 +12624,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12240,7 +12644,8 @@ const PRODUCTS = [
     "code": "FRSTBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Strawberries - Green",
@@ -12252,7 +12657,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12270,7 +12675,8 @@ const PRODUCTS = [
     "code": "STGRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Strawberries - Jamming",
@@ -12286,7 +12692,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -12300,7 +12706,8 @@ const PRODUCTS = [
     "code": "STRJAM"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Strawberries - Keymer Brook Farm",
@@ -12315,7 +12722,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -12330,7 +12737,8 @@ const PRODUCTS = [
     "code": "SKBFTR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Strawberries - Premium",
@@ -12370,11 +12778,12 @@ const PRODUCTS = [
     "code": "STPRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Strawberries - Wonky",
-  "origin": "West Sussex",
+  "origin": "Hampshire",
   "group": "Fruit",
   "months": [
    0,
@@ -12385,7 +12794,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -12400,16 +12809,17 @@ const PRODUCTS = [
     "code": "STWOTR"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Berries.pdf"
  },
  {
   "name": "Swedes",
-  "origin": "Lincolnshire",
+  "origin": "UK",
   "group": "Vegetables",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12440,7 +12850,8 @@ const PRODUCTS = [
     "code": "SWEWEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Sweetcorn (Organic)",
@@ -12456,7 +12867,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -12470,13 +12881,27 @@ const PRODUCTS = [
     "code": "ORSRBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Sweetcorn - On the Cob",
-  "origin": "UK",
+  "origin": "West Sussex",
   "group": "Vegetables",
-  "months": null,
+  "months": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   2,
+   2,
+   1,
+   1,
+   0
+  ],
   "note": "",
   "status": "hidden",
   "originDetail": "Grown on Sefter Farm, Pagham by Peter Barfoot",
@@ -12492,7 +12917,8 @@ const PRODUCTS = [
     "code": "SCOCEA"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Sweetcorn - Ribs",
@@ -12509,7 +12935,8 @@ const PRODUCTS = [
     "code": "SWRIBX"
    }
   ],
-  "seasonalityPending": true
+  "seasonalityPending": true,
+  "infoPack": ""
  },
  {
   "name": "Sweetcorn - Twin Pack",
@@ -12527,7 +12954,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -12539,7 +12966,8 @@ const PRODUCTS = [
     "code": "STPWBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Tayberries",
@@ -12553,7 +12981,7 @@ const PRODUCTS = [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12569,7 +12997,8 @@ const PRODUCTS = [
     "code": "TAYBBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Thyme",
@@ -12584,7 +13013,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -12604,7 +13033,8 @@ const PRODUCTS = [
     "code": "THYMBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Tomato Leaves",
@@ -12619,7 +13049,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0,
    0
@@ -12634,17 +13064,18 @@ const PRODUCTS = [
     "code": "TOLEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Tomatoes - Cherry",
-  "origin": "West Sussex",
+  "origin": "Varies - see covers_also",
   "group": "Vegetables",
   "months": [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12664,17 +13095,18 @@ const PRODUCTS = [
     "code": "TOCHBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Tomatoes%20-%20Vine.pdf"
  },
  {
   "name": "Tomatoes - Cherry Orange",
-  "origin": "West Sussex",
+  "origin": "Varies - see covers_also",
   "group": "Vegetables",
   "months": [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12694,17 +13126,18 @@ const PRODUCTS = [
     "code": "TOCOBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Tomatoes%20-%20Vine.pdf"
  },
  {
   "name": "Tomatoes - Classic",
-  "origin": "West Sussex",
+  "origin": "Varies - see covers_also",
   "group": "Vegetables",
   "months": [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12724,17 +13157,18 @@ const PRODUCTS = [
     "code": "TOCTBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Tomatoes%20-%20Vine.pdf"
  },
  {
   "name": "Tomatoes - Cocktail",
-  "origin": "West Sussex",
+  "origin": "Varies - see covers_also",
   "group": "Vegetables",
   "months": [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12754,17 +13188,18 @@ const PRODUCTS = [
     "code": "TOCTBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Tomatoes%20-%20Vine.pdf"
  },
  {
   "name": "Tomatoes - Sauce",
-  "origin": "West Sussex",
+  "origin": "Varies - see covers_also",
   "group": "Vegetables",
   "months": [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12784,17 +13219,18 @@ const PRODUCTS = [
     "code": "TOSABX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Tomatoes%20-%20Vine.pdf"
  },
  {
   "name": "Tomatoes - Sussex Sweet Plum",
-  "origin": "West Sussex",
+  "origin": "Varies - see covers_also",
   "group": "Vegetables",
   "months": [
    0,
    1,
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12814,11 +13250,12 @@ const PRODUCTS = [
     "code": "TSSPBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Tomatoes%20-%20Vine.pdf"
  },
  {
   "name": "Truffles - Autumn",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Mushrooms",
   "months": [
    1,
@@ -12832,7 +13269,7 @@ const PRODUCTS = [
    1,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "hidden",
@@ -12844,7 +13281,8 @@ const PRODUCTS = [
     "code": "TRAUEA"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Turnips",
@@ -12852,7 +13290,7 @@ const PRODUCTS = [
   "group": "Vegetables",
   "months": [
    2,
-   2,
+   1,
    1,
    0,
    0,
@@ -12874,7 +13312,8 @@ const PRODUCTS = [
     "code": "TURNKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Turnips - Baby",
@@ -12890,7 +13329,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2,
+   1,
    1,
    0
   ],
@@ -12904,7 +13343,8 @@ const PRODUCTS = [
     "code": "TUBABU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Venison - Barnsley chops",
@@ -12913,7 +13353,7 @@ const PRODUCTS = [
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -12934,7 +13374,8 @@ const PRODUCTS = [
     "code": "VBCEKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Burgers",
@@ -12943,7 +13384,7 @@ const PRODUCTS = [
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -12964,16 +13405,17 @@ const PRODUCTS = [
     "code": "VEBUBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Diced",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -12994,16 +13436,17 @@ const PRODUCTS = [
     "code": "VEDIKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Fillet",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -13024,16 +13467,17 @@ const PRODUCTS = [
     "code": "VEFIKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Haunch Boneless Rolled",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -13054,16 +13498,17 @@ const PRODUCTS = [
     "code": "VHBRKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Minced",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -13084,16 +13529,17 @@ const PRODUCTS = [
     "code": "VEMIBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Minced 12% Fat",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -13114,16 +13560,17 @@ const PRODUCTS = [
     "code": "VMFVBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Minced 30% Fat",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -13144,16 +13591,17 @@ const PRODUCTS = [
     "code": "VMFEBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Minced 30% Fat & Seasoned",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -13174,16 +13622,17 @@ const PRODUCTS = [
     "code": "VMFSBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Minced 40% Fat",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -13204,16 +13653,17 @@ const PRODUCTS = [
     "code": "VMFNBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Rack French Trimmed",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -13234,16 +13684,17 @@ const PRODUCTS = [
     "code": "VRFTKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Saddle",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -13264,16 +13715,17 @@ const PRODUCTS = [
     "code": "VESAKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Shoulder",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -13294,16 +13746,17 @@ const PRODUCTS = [
     "code": "VESHKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Venison - Whole",
-  "origin": "West Sussex",
+  "origin": "Sussex",
   "group": "Meat",
   "months": [
    2,
    2,
-   2,
+   1,
    1,
    1,
    1,
@@ -13324,7 +13777,8 @@ const PRODUCTS = [
     "code": "VEWHKG"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": "https://chefsfarmshq.github.io/CFChampionProducts/info-packs/Venison.pdf"
  },
  {
   "name": "Vinegar - Apple Cider",
@@ -13354,7 +13808,8 @@ const PRODUCTS = [
     "code": "VACIBX"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  },
  {
   "name": "Watercress",
@@ -13372,7 +13827,7 @@ const PRODUCTS = [
    2,
    2,
    2,
-   2
+   1
   ],
   "note": "",
   "status": "available",
@@ -13399,7 +13854,8 @@ const PRODUCTS = [
     "code": "WATEBU"
    }
   ],
-  "seasonalityPending": false
+  "seasonalityPending": false,
+  "infoPack": ""
  }
 ];
 
@@ -13420,9 +13876,6 @@ function tierOf(origin){
 }
 
 const list = document.getElementById('list');
-const listScroll = document.getElementById('list-scroll');
-const listHeadWrap = document.getElementById('list-head-wrap');
-const controlsBar = document.getElementById('controls-bar');
 const searchInput = document.getElementById('search');
 const groupFilter = document.getElementById('group-filter');
 const originFilter = document.getElementById('origin-filter');
@@ -13431,20 +13884,6 @@ const resultCount = document.getElementById('result-count');
 const emptyState = document.getElementById('empty-state');
 const tooltip = document.getElementById('tooltip');
 const monthHeaderLabels = document.getElementById('month-header-labels');
-
-listScroll.addEventListener('scroll', () => {
-  listHeadWrap.scrollLeft = listScroll.scrollLeft;
-});
-
-function positionListHead(){
-  if (window.getComputedStyle(controlsBar).position === 'sticky'){
-    listHeadWrap.style.top = controlsBar.offsetHeight + 'px';
-  } else {
-    listHeadWrap.style.top = '0px';
-  }
-}
-window.addEventListener('resize', positionListHead);
-window.addEventListener('load', positionListHead);
 
 let DATA = [];
 let selectedMonths = new Set(); // indices 0-11, empty = no month filter
@@ -13525,6 +13964,9 @@ function buildDetailPanel(product){
   }
   if (noteText){
     parts.push(`<p>${escapeHtml(noteText)}</p>`);
+  }
+  if (product.infoPack){
+    parts.push(`<p><a class="info-pack-link" href="${escapeHtml(product.infoPack)}" target="_blank" rel="noopener noreferrer">&#128196; View info pack</a></p>`);
   }
   if (product.images && product.images.length){
     const imgs = product.images.map(src => `<img src="${escapeHtml(src)}" alt="${escapeHtml(product.name)}">`).join('');
@@ -13621,7 +14063,7 @@ function groupFilteredProducts(products){
 function render(){
   const q = searchInput.value.trim().toLowerCase();
   const group = groupFilter.value;
-  const originTierFilter = originFilter.value; // '', 'local', 'uk', 'import'
+  const originTierFilter = originFilter.value; // '', 'local', 'uk'
 
   buildMonthHeader();
 
@@ -13632,7 +14074,6 @@ function render(){
       const tier = tierOf(product.origin);
       if (originTierFilter === 'local' && tier !== 'local') return false;
       if (originTierFilter === 'uk' && tier === 'import') return false;
-      if (originTierFilter === 'import' && tier !== 'import') return false;
     }
 
     if (selectedMonths.size > 0){
@@ -13778,7 +14219,6 @@ function applyView(){
   viewToggleButtons.forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === (isMobile ? 'mobile' : 'desktop'));
   });
-  positionListHead();
 }
 
 viewToggleButtons.forEach(btn => {
@@ -13799,7 +14239,28 @@ applyView();
 DATA = PRODUCTS;
 populateFilters();
 render();
-positionListHead();
+
+// Keep the column-header row's horizontal scroll position in sync with the
+// product rows below it, since they're no longer the same physical scroll
+// container (the header now lives in the sticky wrapper up top, so it can
+// stick reliably, while the rows scroll independently beneath it).
+const listScrollEl = document.querySelector('.list-scroll');
+const listHeadScrollEl = document.getElementById('list-head-scroll');
+let syncingScroll = false;
+if (listScrollEl && listHeadScrollEl){
+  listScrollEl.addEventListener('scroll', () => {
+    if (syncingScroll) return;
+    syncingScroll = true;
+    listHeadScrollEl.scrollLeft = listScrollEl.scrollLeft;
+    syncingScroll = false;
+  });
+  listHeadScrollEl.addEventListener('scroll', () => {
+    if (syncingScroll) return;
+    syncingScroll = true;
+    listScrollEl.scrollLeft = listHeadScrollEl.scrollLeft;
+    syncingScroll = false;
+  });
+}
 
 </script>
 </body>
