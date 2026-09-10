@@ -739,7 +739,7 @@ body.view-mobile .pack-compact-row{ justify-content: flex-start; flex-wrap: wrap
     </div>
   </header>
 
-  <div class="controls-bar">
+  <div class="controls-bar" id="controls-bar">
     <div class="wrap controls">
       <input type="search" id="search" placeholder="Search products, farms, counties&hellip;" aria-label="Search products">
       <select id="group-filter" aria-label="Filter by category">
@@ -13422,6 +13422,7 @@ function tierOf(origin){
 const list = document.getElementById('list');
 const listScroll = document.getElementById('list-scroll');
 const listHeadWrap = document.getElementById('list-head-wrap');
+const controlsBar = document.getElementById('controls-bar');
 const searchInput = document.getElementById('search');
 const groupFilter = document.getElementById('group-filter');
 const originFilter = document.getElementById('origin-filter');
@@ -13434,6 +13435,16 @@ const monthHeaderLabels = document.getElementById('month-header-labels');
 listScroll.addEventListener('scroll', () => {
   listHeadWrap.scrollLeft = listScroll.scrollLeft;
 });
+
+function positionListHead(){
+  if (window.getComputedStyle(controlsBar).position === 'sticky'){
+    listHeadWrap.style.top = controlsBar.offsetHeight + 'px';
+  } else {
+    listHeadWrap.style.top = '0px';
+  }
+}
+window.addEventListener('resize', positionListHead);
+window.addEventListener('load', positionListHead);
 
 let DATA = [];
 let selectedMonths = new Set(); // indices 0-11, empty = no month filter
@@ -13767,6 +13778,7 @@ function applyView(){
   viewToggleButtons.forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === (isMobile ? 'mobile' : 'desktop'));
   });
+  positionListHead();
 }
 
 viewToggleButtons.forEach(btn => {
@@ -13787,6 +13799,7 @@ applyView();
 DATA = PRODUCTS;
 populateFilters();
 render();
+positionListHead();
 
 </script>
 </body>
