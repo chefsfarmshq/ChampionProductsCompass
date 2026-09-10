@@ -267,9 +267,17 @@ select{
 
 main.wrap{ padding: 0 28px 20px; }
 
+.list-head-wrap{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  overflow: hidden;
+  background: var(--bg);
+  margin-top: 24px;
+}
+
 .list-scroll{
   overflow-x: auto;
-  padding-top: 24px;
 }
 
 /* Shared row grid: name flexes, origin + category fixed, months fixed track */
@@ -282,7 +290,6 @@ main.wrap{ padding: 0 28px 20px; }
 }
 
 .list-head{
-  background: var(--bg);
   border-bottom: 1px solid var(--line-strong);
   padding: 10px 4px 10px;
   font-family: var(--font-mono);
@@ -636,7 +643,7 @@ main.wrap{ padding: 0 28px 20px; }
 
 body.view-mobile .hero{ padding: 40px 0 26px; }
 body.view-mobile .logo{ height: 72px; }
-body.view-mobile .list-head{ display: none; }
+body.view-mobile .list-head-wrap{ display: none; }
 body.view-mobile .list-scroll{ overflow-x: visible; padding-top: 8px; }
 body.view-mobile .row,
 body.view-mobile .group-header{
@@ -757,13 +764,15 @@ body.view-mobile .pack-compact-row{ justify-content: flex-start; flex-wrap: wrap
   </div>
 
   <main class="wrap">
-    <div class="list-scroll">
+    <div class="list-head-wrap" id="list-head-wrap">
       <div class="list-head" id="list-head">
         <span class="col-name">Product</span>
         <span class="col-origin">Origin</span>
         <span class="col-category">Category</span>
         <div class="col-months" id="month-header-labels"></div>
       </div>
+    </div>
+    <div class="list-scroll" id="list-scroll">
       <div id="list" class="list"></div>
     </div>
     <p id="empty-state" class="empty-state" hidden>Nothing matches that search &mdash; try a different term or clear the filters.</p>
@@ -13411,6 +13420,8 @@ function tierOf(origin){
 }
 
 const list = document.getElementById('list');
+const listScroll = document.getElementById('list-scroll');
+const listHeadWrap = document.getElementById('list-head-wrap');
 const searchInput = document.getElementById('search');
 const groupFilter = document.getElementById('group-filter');
 const originFilter = document.getElementById('origin-filter');
@@ -13419,6 +13430,10 @@ const resultCount = document.getElementById('result-count');
 const emptyState = document.getElementById('empty-state');
 const tooltip = document.getElementById('tooltip');
 const monthHeaderLabels = document.getElementById('month-header-labels');
+
+listScroll.addEventListener('scroll', () => {
+  listHeadWrap.scrollLeft = listScroll.scrollLeft;
+});
 
 let DATA = [];
 let selectedMonths = new Set(); // indices 0-11, empty = no month filter
